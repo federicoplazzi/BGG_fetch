@@ -17,13 +17,13 @@ BGG_fetch will connect to https://boardgamegeek.com/browse/boardgame and downloa
 
 BGG_fecth will print an output table and a logfile. Currently, only some features are supported, but more are to come.
 
-Game title
-Year
-Average rating
-Average Geek rating
-Average weight
-Number of voters
-Minimum players
-Maximum players
-Game categories
-Game mechanics
+1. Game title
+2. Year
+3. Average rating
+4. Average Geek rating
+5. Average weight
+6. Number of voters
+7. Minimum players
+8. Maximum players
+9. Game categories
+10. Game mechanics
