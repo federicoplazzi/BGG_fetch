@@ -144,9 +144,13 @@ for p in range(int(last_page)):
             else:
                 current_year = "NA"
                 m = 0
-            current_rating = current_list[HTML_line+28+m].strip().split('\t')[0]
-            current_geek_rating = current_list[HTML_line+25+m].strip().split('\t')[0]
-            current_voters = current_list[HTML_line+31+m].strip().split('\t')[0]
+            if '<p class="smallefont dull"' in current_list[HTML_line+18].strip():
+                n = 3
+            else:
+                n = 0
+            current_rating = current_list[HTML_line+25+m+n].strip().split('\t')[0]
+            current_geek_rating = current_list[HTML_line+22+m+n].strip().split('\t')[0]
+            current_voters = current_list[HTML_line+28+m+n].strip().split('\t')[0]
 
 # Open the game's page.
 
