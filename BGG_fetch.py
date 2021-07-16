@@ -19,7 +19,7 @@ parser.add_argument('-p', dest='max_pages',required=False,help='Number of games 
 # Remove temporary files.
 parser.add_argument('--clean',dest='clean',required=False,help='Remove temporary files',action='store_true')
 parser.add_argument('--no-clean',dest='clean',required=False,help='Do not remove temporary files',action='store_false')
-parser.set_defaults(clean=False)
+parser.set_defaults(clean=True)
 
 # Output file
 parser.add_argument('-o', dest='outfile',required=False,help='Output file name',default='game.out')
