@@ -19,7 +19,7 @@ parser.add_argument('-p', dest='max_pages',required=False,help='Number of games 
 # Remove temporary files.
 parser.add_argument('--clean',dest='clean',required=False,help='Remove temporary files',action='store_true')
 parser.add_argument('--no-clean',dest='clean',required=False,help='Do not remove temporary files',action='store_false')
-parser.set_defaults(clean=True)
+parser.set_defaults(clean=False)
 
 # Output file
 parser.add_argument('-o', dest='outfile',required=False,help='Output file name',default='game.out')
@@ -139,7 +139,7 @@ for p in range(int(last_page)):
     HTML_line = 0
     while HTML_line < len(current_list):
         line = current_list[HTML_line].strip()
-        if 'Board Game: ' in line or 'From gallery of BoardGameGeek' in line:
+        if '<img alt="Board Game: ' in line or 'From gallery of BoardGameGeek' in line:
             current_ID = max_ID+1
             max_ID = max_ID+1
             current_name = current_list[HTML_line+12].split('class=\'primary\' >')[1].split('</a>')[0]
