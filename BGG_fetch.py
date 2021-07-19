@@ -208,26 +208,32 @@ for p in range(int(last_page)):
                         current_max_players = stats_line.split('maxplayers":"')[1].split('"')[0]
                     else:
                         current_max_players = "NA"
-                    raw_category_line = stats_line.split('boardgamecategory":[')[1].split(']')[0]
-                    if raw_category_line == "":
+                    if 'boardgamecategory":[' in stats_line:
+                        raw_category_line = stats_line.split('boardgamecategory":[')[1].split(']')[0]
+                        if raw_category_line == "":
+                            current_categories = "NA"
+                        else:
+                            category_number = raw_category_line.count('"name":"')
+                            category_list = raw_category_line.split('"name":"')[1].split('"')[0]
+                            if category_number > 1:
+                                for c in range (1,category_number):
+                                    category_list = category_list+'|'+raw_category_line.split('"name":"')[c+1].split('"')[0]
+                            current_categories = category_list
+                    else:
                         current_categories = "NA"
+                    if 'boardgamemechanic":[' in stats_line:
+                        raw_mechanism_line = stats_line.split('boardgamemechanic":[')[1].split(']')[0]
+                        if raw_mechanism_line == "":
+                            current_mechanisms = "NA"
+                        else:
+                            mechanism_number = raw_mechanism_line.count('"name":"')
+                            mechanism_list = raw_mechanism_line.split('"name":"')[1].split('"')[0]
+                            if mechanism_number > 1:
+                                for c in range (1,mechanism_number):
+                                    mechanism_list = mechanism_list+'|'+raw_mechanism_line.split('"name":"')[c+1].split('"')[0]
+                            current_mechanisms = mechanism_list
                     else:
-                        category_number = raw_category_line.count('"name":"')
-                        category_list = raw_category_line.split('"name":"')[1].split('"')[0]
-                        if category_number > 1:
-                            for c in range (1,category_number):
-                                category_list = category_list+'|'+raw_category_line.split('"name":"')[c+1].split('"')[0]
-                        current_categories = category_list
-                    raw_mechanism_line = stats_line.split('boardgamemechanic":[')[1].split(']')[0]
-                    if raw_mechanism_line == "":
                         current_mechanisms = "NA"
-                    else:
-                        mechanism_number = raw_mechanism_line.count('"name":"')
-                        mechanism_list = raw_mechanism_line.split('"name":"')[1].split('"')[0]
-                        if mechanism_number > 1:
-                            for c in range (1,mechanism_number):
-                                mechanism_list = mechanism_list+'|'+raw_mechanism_line.split('"name":"')[c+1].split('"')[0]
-                        current_mechanisms = mechanism_list
                     stats_line_found = True
                 game_line = game_line+1
             
