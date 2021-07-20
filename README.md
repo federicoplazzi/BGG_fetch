@@ -19,11 +19,11 @@ BGG_fecth will print an output table and a logfile. Currently, only some feature
 
 1. Game title
 2. Year
-3. Average rating
-4. Average Geek rating
-5. Average weight
-6. Number of voters
-7. Minimum players
-8. Maximum players
+3. Minimum players
+4. Maximum players
+5. Average rating
+6. Average Geek rating
+7. Average weight
+8. Number of voters
 9. Game categories
 10. Game mechanics
