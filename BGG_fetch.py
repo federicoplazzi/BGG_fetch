@@ -67,7 +67,7 @@ if args.max_pages == 0:
     log_file.close()
 else:
     last_page = args.max_pages
-    if last_page == 1:
+    if int(last_page) == 1:
         print('Start fetching the first page...')
         log_file = open('BGG_log.txt','w')
         log_file.write('Start fetching the first page...\n')
@@ -78,7 +78,6 @@ else:
         log_file.write('Start fetching '+str(last_page)+' pages...\n')
         log_file.close()
 
-
 # Compute _steps_ steps to monitor the whole process.
 
 game_print_step = float(last_page)/int(args.steps)
@@ -88,7 +87,7 @@ for s in range(int(args.steps)):
 
 # Set up empty lists for the final table.
 
-max_rank = 0
+max_ID = 0
 
 # Calling _p_ the number of pages (last_page), start a cycle with p repetitions.
 
@@ -99,7 +98,7 @@ log_file.close()
 # Start the final output.
 
 game_out = open(args.outfile,'w')
-game_out.write("Rank\tGame\tYear\tMin_players\tMax_players\tRating\tGeekRating\tWeight\tVoters\tCategories\tMechanisms\n")
+game_out.write("ID\tGame\tYear\tMin_players\tMax_players\tRating\tGeekRating\tWeight\tVoters\tCategories\tMechanisms\n")
 game_out.close()
 
 for p in range(int(last_page)):
@@ -115,6 +114,12 @@ for p in range(int(last_page)):
         log_file = open('BGG_log.txt','a')
         log_file.write('Unicode error while downloading page #'+str(p+1)+'. Maybe an uncommon character in some game name? Skipping...\n')
         log_file.close()
+        continue
+    except OSError:
+        p = p-1
+        continue
+    except urllib.error.URLError:
+        p = p-1
         continue
     except:
         print('Error while downloading page #'+str(p+1)+'. Skipping...')
@@ -134,17 +139,17 @@ for p in range(int(last_page)):
     HTML_line = 0
     while HTML_line < len(current_list):
         line = current_list[HTML_line].strip()
-        if 'Board Game: ' in line:
-            current_rank = max_rank+1
-            max_rank = max_rank+1
-            current_name = line.split('Board Game: ')[1].split('"')[0]
+        if '<img alt="Board Game: ' in line or 'From gallery of BoardGameGeek' in line:
+            current_ID = max_ID+1
+            max_ID = max_ID+1
+            current_name = current_list[HTML_line+12].split('class=\'primary\' >')[1].split('</a>')[0]
             if "<span class='smallerfont dull'>(" in current_list[HTML_line+14].strip():
                 current_year = current_list[HTML_line+14].strip().split('(')[1].split(')')[0]
                 m = 1
             else:
                 current_year = "NA"
                 m = 0
-            if '<p class="smallefont dull"' in current_list[HTML_line+18].strip():
+            if '<p class="smallefont dull"' in current_list[HTML_line+17+m].strip():
                 n = 3
             else:
                 n = 0
@@ -165,6 +170,10 @@ for p in range(int(last_page)):
                 log_file.write('Unicode error while downloading the game '+current_name+'. Maybe an uncommon character in the game name? Skipping...\n')
                 log_file.close()
                 HTML_line = HTML_line+1
+                continue
+            except OSError:
+                continue
+            except urllib.error.URLError:
                 continue
             except:
                 print('Error while downloading the game '+current_name+'. Skipping...')
@@ -199,33 +208,39 @@ for p in range(int(last_page)):
                         current_max_players = stats_line.split('maxplayers":"')[1].split('"')[0]
                     else:
                         current_max_players = "NA"
-                    raw_category_line = stats_line.split('boardgamecategory":[')[1].split(']')[0]
-                    if raw_category_line == "":
+                    if 'boardgamecategory":[' in stats_line:
+                        raw_category_line = stats_line.split('boardgamecategory":[')[1].split(']')[0]
+                        if raw_category_line == "":
+                            current_categories = "NA"
+                        else:
+                            category_number = raw_category_line.count('"name":"')
+                            category_list = raw_category_line.split('"name":"')[1].split('"')[0]
+                            if category_number > 1:
+                                for c in range (1,category_number):
+                                    category_list = category_list+'|'+raw_category_line.split('"name":"')[c+1].split('"')[0]
+                            current_categories = category_list
+                    else:
                         current_categories = "NA"
+                    if 'boardgamemechanic":[' in stats_line:
+                        raw_mechanism_line = stats_line.split('boardgamemechanic":[')[1].split(']')[0]
+                        if raw_mechanism_line == "":
+                            current_mechanisms = "NA"
+                        else:
+                            mechanism_number = raw_mechanism_line.count('"name":"')
+                            mechanism_list = raw_mechanism_line.split('"name":"')[1].split('"')[0]
+                            if mechanism_number > 1:
+                                for c in range (1,mechanism_number):
+                                    mechanism_list = mechanism_list+'|'+raw_mechanism_line.split('"name":"')[c+1].split('"')[0]
+                            current_mechanisms = mechanism_list
                     else:
-                        category_number = raw_category_line.count('"name":"')
-                        category_list = raw_category_line.split('"name":"')[1].split('"')[0]
-                        if category_number > 1:
-                            for c in range (1,category_number):
-                                category_list = category_list+'|'+raw_category_line.split('"name":"')[c+1].split('"')[0]
-                        current_categories = category_list
-                    raw_mechanism_line = stats_line.split('boardgamemechanic":[')[1].split(']')[0]
-                    if raw_mechanism_line == "":
                         current_mechanisms = "NA"
-                    else:
-                        mechanism_number = raw_mechanism_line.count('"name":"')
-                        mechanism_list = raw_mechanism_line.split('"name":"')[1].split('"')[0]
-                        if mechanism_number > 1:
-                            for c in range (1,mechanism_number):
-                                mechanism_list = mechanism_list+'|'+raw_mechanism_line.split('"name":"')[c+1].split('"')[0]
-                        current_mechanisms = mechanism_list
                     stats_line_found = True
                 game_line = game_line+1
             
 # Write a line of the final table-formatted file.
 
             game_out = open(args.outfile,'a')
-            current_stats = str(current_rank)+"\t"+current_name+"\t"+current_year+"\t"+current_min_players+"\t"+current_max_players+"\t"+current_rating+"\t"+current_geek_rating+"\t"+current_weight+"\t"+current_voters+"\t"+current_categories+"\t"+current_mechanisms+"\n"
+            current_stats = str(current_ID)+"\t"+current_name+"\t"+current_year+"\t"+current_min_players+"\t"+current_max_players+"\t"+current_rating+"\t"+current_geek_rating+"\t"+current_weight+"\t"+current_voters+"\t"+current_categories+"\t"+current_mechanisms+"\n"
             game_out.write(current_stats.replace("N/A","NA").replace('\/','/').replace(' / ','/'))
             game_out.close()
         HTML_line = HTML_line+1
@@ -233,12 +248,12 @@ for p in range(int(last_page)):
 # Check if progress should be printed.
 
     if p+1 in step_list:
-        print('Fetching boardgame #'+str(max_rank)+' ('+current_name+'). Approximately '+str(round(float((p+1)/int(last_page)*100),2))+'% completed!')
+        print('Fetching boardgame #'+str(max_ID)+' ('+current_name+'). Approximately '+str(round(float((p+1)/int(last_page)*100),2))+'% completed!')
         log_file = open('BGG_log.txt','a')
-        log_file.write('Fetching boardgame #'+str(max_rank)+' ('+current_name+'). Approximately '+str(round(float((p+1)/int(last_page)*100),2))+'% completed!\n')
+        log_file.write('Fetching boardgame #'+str(max_ID)+' ('+current_name+'). Approximately '+str(round(float((p+1)/int(last_page)*100),2))+'% completed!\n')
         log_file.close()
 
-print('End. '+str(max_rank)+' games fetched from BGG.')
+print('End. '+str(max_ID)+' games fetched from BGG.')
 log_file = open('BGG_log.txt','a')
-log_file.write('End. '+str(max_rank)+' games fetched from BGG.')
+log_file.write('End. '+str(max_ID)+' games fetched from BGG.')
 log_file.close()
