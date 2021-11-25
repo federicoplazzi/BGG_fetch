@@ -98,7 +98,7 @@ log_file.close()
 # Start the final output.
 
 game_out = open(args.outfile,'w')
-game_out.write("ID\tGame\tYear\tMin_players\tMax_players\tRating\tGeekRating\tWeight\tVoters\tCategories\tMechanisms\n")
+game_out.write("ID\tGame\tYear\tMin_players\tMax_players\tRating\tGeekRating\tWeight\tVoters\tCategories\tMechanisms\tFamilies\n")
 game_out.close()
 
 for p in range(int(last_page)):
@@ -234,13 +234,26 @@ for p in range(int(last_page)):
                             current_mechanisms = mechanism_list
                     else:
                         current_mechanisms = "NA"
+                    if 'boardgamefamily":[' in stats_line:
+                        raw_family_line = stats_line.split('boardgamefamily":[')[1].split(']')[0]
+                        if raw_family_line == "":
+                            current_families = "NA"
+                        else:
+                            family_number = raw_family_line.count('"name":"')
+                            family_list = raw_family_line.split('"name":"')[1].split('"')[0]
+                            if family_number > 1:
+                                for c in range (1,family_number):
+                                    family_list = family_list+'|'+raw_family_line.split('"name":"')[c+1].split('"')[0]
+                            current_families = family_list
+                    else:
+                        current_families = "NA"
                     stats_line_found = True
                 game_line = game_line+1
             
 # Write a line of the final table-formatted file.
 
             game_out = open(args.outfile,'a')
-            current_stats = str(current_ID)+"\t"+current_name+"\t"+current_year+"\t"+current_min_players+"\t"+current_max_players+"\t"+current_rating+"\t"+current_geek_rating+"\t"+current_weight+"\t"+current_voters+"\t"+current_categories+"\t"+current_mechanisms+"\n"
+            current_stats = str(current_ID)+"\t"+current_name+"\t"+current_year+"\t"+current_min_players+"\t"+current_max_players+"\t"+current_rating+"\t"+current_geek_rating+"\t"+current_weight+"\t"+current_voters+"\t"+current_categories+"\t"+current_mechanisms+"\t"+current_families+"\n"
             game_out.write(current_stats.replace("N/A","NA").replace('\/','/').replace(' / ','/'))
             game_out.close()
         HTML_line = HTML_line+1
