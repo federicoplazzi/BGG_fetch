@@ -1,6 +1,16 @@
 from urllib.request import urlopen
+#from requests_html import HTMLSession
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
 import argparse
 import os
+import time
+
+chrome_webdriver = '/home/PERSONALE/federico.plazzi2/chromedriver_linux64/chromedriver'
+chrome_options = webdriver.ChromeOptions()
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--headless')
+chrome_options.add_argument('--disable-gpu')
 
 base_URL = 'https://boardgamegeek.com'
 
@@ -11,10 +21,10 @@ parser = argparse.ArgumentParser()
 parser._optionals.title = "Arguments"
 
 # Input file.
-parser.add_argument('--steps', dest='steps',required=False,help='How often should process be printed (number of pages)?',default=100)
+parser.add_argument('--steps', dest='steps',required=False,help='How often should process be printed (number of screen messages)?',default=100)
 
 # Number of games to include.
-parser.add_argument('-p', dest='max_pages',required=False,help='Number of games to be parsed from BGG',default=0)
+parser.add_argument('-p', dest='max_pages',required=False,help='Number of game pages to be parsed from BGG',default=0)
 
 # Remove temporary files.
 parser.add_argument('--clean',dest='clean',required=False,help='Remove temporary files',action='store_true')
@@ -100,6 +110,13 @@ log_file.close()
 game_out = open(args.outfile,'w')
 game_out.write("ID\tGame\tYear\tMin_players\tMax_players\tRating\tGeekRating\tWeight\tVoters\tCategories\tMechanisms\tFamilies\n")
 game_out.close()
+
+# Open a headless Chrome browser (ensure that the browser and the drivers match!) and start counting elapsed time.
+
+browser = webdriver.Chrome(chrome_webdriver,chrome_options=chrome_options)
+start_time = time.monotonic()
+
+# Let's start!
 
 for p in range(int(last_page)):
 
@@ -208,65 +225,149 @@ for p in range(int(last_page)):
                         current_max_players = stats_line.split('maxplayers":"')[1].split('"')[0]
                     else:
                         current_max_players = "NA"
-                    if 'boardgamecategory":[' in stats_line:
-                        raw_category_line = stats_line.split('boardgamecategory":[')[1].split(']')[0]
-                        if raw_category_line == "":
-                            current_categories = "NA"
-                        else:
-                            category_number = raw_category_line.count('"name":"')
-                            category_list = raw_category_line.split('"name":"')[1].split('"')[0]
-                            if category_number > 1:
-                                for c in range (1,category_number):
-                                    category_list = category_list+'|'+raw_category_line.split('"name":"')[c+1].split('"')[0]
-                            current_categories = category_list
-                    else:
-                        current_categories = "NA"
-                    if 'boardgamemechanic":[' in stats_line:
-                        raw_mechanism_line = stats_line.split('boardgamemechanic":[')[1].split(']')[0]
-                        if raw_mechanism_line == "":
-                            current_mechanisms = "NA"
-                        else:
-                            mechanism_number = raw_mechanism_line.count('"name":"')
-                            mechanism_list = raw_mechanism_line.split('"name":"')[1].split('"')[0]
-                            if mechanism_number > 1:
-                                for c in range (1,mechanism_number):
-                                    mechanism_list = mechanism_list+'|'+raw_mechanism_line.split('"name":"')[c+1].split('"')[0]
-                            current_mechanisms = mechanism_list
-                    else:
-                        current_mechanisms = "NA"
-                    if 'boardgamefamily":[' in stats_line:
-                        raw_family_line = stats_line.split('boardgamefamily":[')[1].split(']')[0]
-                        if raw_family_line == "":
-                            current_families = "NA"
-                        else:
-                            family_number = raw_family_line.count('"name":"')
-                            family_list = raw_family_line.split('"name":"')[1].split('"')[0]
-                            if family_number > 1:
-                                for c in range (1,family_number):
-                                    family_list = family_list+'|'+raw_family_line.split('"name":"')[c+1].split('"')[0]
-                            current_families = family_list
-                    else:
-                        current_families = "NA"
+#                   if 'boardgamecategory":[' in stats_line:
+#                       raw_category_line = stats_line.split('boardgamecategory":[')[1].split(']')[0]
+#                       if raw_category_line == "":
+#                           current_categories = "NA"
+#                       else:
+#                           category_number = raw_category_line.count('"name":"')
+#                           category_list = raw_category_line.split('"name":"')[1].split('"')[0]
+#                           if category_number > 1:
+#                               for c in range (1,category_number):
+#                                   category_list = category_list+'|'+raw_category_line.split('"name":"')[c+1].split('"')[0]
+#                           current_categories = category_list
+#                   else:
+#                       current_categories = "NA"
+#                   if 'boardgamemechanic":[' in stats_line:
+#                       raw_mechanism_line = stats_line.split('boardgamemechanic":[')[1].split(']')[0]
+#                       if raw_mechanism_line == "":
+#                           current_mechanisms = "NA"
+#                       else:
+#                           mechanism_number = raw_mechanism_line.count('"name":"')
+#                           mechanism_list = raw_mechanism_line.split('"name":"')[1].split('"')[0]
+#                           if mechanism_number > 1:
+#                               for c in range (1,mechanism_number):
+#                                   mechanism_list = mechanism_list+'|'+raw_mechanism_line.split('"name":"')[c+1].split('"')[0]
+#                           current_mechanisms = mechanism_list
+#                   else:
+#                       current_mechanisms = "NA"
+#                   if 'boardgamefamily":[' in stats_line:
+#                       raw_family_line = stats_line.split('boardgamefamily":[')[1].split(']')[0]
+#                       if raw_family_line == "":
+#                           current_families = "NA"
+#                       else:
+#                           family_number = raw_family_line.count('"name":"')
+#                           family_list = raw_family_line.split('"name":"')[1].split('"')[0]
+#                           if family_number > 1:
+#                               for c in range (1,family_number):
+#                                   family_list = family_list+'|'+raw_family_line.split('"name":"')[c+1].split('"')[0]
+#                           current_families = family_list
+#                   else:
+#                       current_families = "NA"
                     stats_line_found = True
                 game_line = game_line+1
-            
+
+# Look for categories, mechanisms, and families from the full credit page.
+
+#           try:
+#               current_session = HTMLSession()
+#           except:
+#               continue
+#           try:
+#               game_session = current_session.get(game_URL+'/credits')
+#           except pyppeteer.errors.NetworkError:
+#               print('Error while getting the game '+current_name+'. Retrying...')
+#               log_file = open('BGG_log.txt','a')
+#               log_file.write('Error while getting the game '+current_name+'. Retrying...\n')
+#               log_file.close()
+#               continue
+#           except:
+#               print('Error while getting the game '+current_name+'. Skipping...')
+#               log_file = open('BGG_log.txt','a')
+#               log_file.write('Error while getting the game '+current_name+'. Skipping...\n')
+#               log_file.close()
+#               HTML_line = HTML_line+1
+#               continue
+#           try:
+#               game_session.html.render()
+#           except:
+#               print('Error while rendering the game '+current_name+'. Skipping...')
+#               log_file = open('BGG_log.txt','a')
+#               log_file.write('Error while rendering the game '+current_name+'. Skipping...\n')
+#               log_file.close()
+#               HTML_line = HTML_line+1
+#               continue
+#           current_credits = open('current_credits.txt','w')
+#           current_credits.writelines(game_session.html.html)
+
+            browser.get(game_URL+'/credits')
+            try:
+                game_session = browser.page_source
+            except:
+                print('Error while rendering the game '+current_name+'. Skipping...')
+                continue
+            current_credits = open('current_credits.txt','w')
+            current_credits.writelines(game_session)
+            current_credits.close()
+            current_credits = open('current_credits.txt','r')
+            current_credits_list = current_credits.readlines()
+            current_credits.close()
+            if args.clean:
+                os.remove('current_credits.txt')
+            string_line_found = False
+            game_line = 0
+            while string_line_found == False:
+                string_line = current_credits_list[game_line].strip()
+                if '<span class="rating-stars-secondary">' in string_line:
+                    category_number = string_line.count(' href="/boardgamecategory/')
+                    if category_number == 0:
+                        current_categories = "NA"
+                    else:
+                        current_categories = string_line.split(' href="/boardgamecategory/')[1].split('</a>')[0].split('>')[1]
+                        if category_number > 1:
+                            for c in range(1,category_number):
+                                current_categories = current_categories+'|'+string_line.split(' href="/boardgamecategory/')[c+1].split('</a>')[0].split('>')[1]
+                    mechanism_number = string_line.count(' href="/boardgamemechanic/')
+                    if mechanism_number == 0:
+                        current_mechanisms = "NA"
+                    else:
+                        current_mechanisms = string_line.split(' href="/boardgamemechanic/')[1].split('</a>')[0].split('>')[1]
+                        if mechanism_number > 1:
+                            for m in range(1,mechanism_number):
+                                current_mechanisms = current_mechanisms+'|'+string_line.split(' href="/boardgamemechanic/')[m+1].split('</a>')[0].split('>')[1]
+                    family_number = string_line.count(' href="/boardgamefamily/')
+                    if family_number == 0:
+                        current_families = "NA"
+                    else:
+                        current_families = string_line.split(' href="/boardgamefamily/')[1].split('</a>')[0].split('>')[1]
+                        if family_number > 1:
+                            for f in range(1,family_number):
+                                current_families = current_families+'|'+string_line.split(' href="/boardgamefamily/')[f+1].split('</a>')[0].split('>')[1]
+                    string_line_found = True
+                game_line = game_line+1
+
 # Write a line of the final table-formatted file.
 
             game_out = open(args.outfile,'a')
             current_stats = str(current_ID)+"\t"+current_name+"\t"+current_year+"\t"+current_min_players+"\t"+current_max_players+"\t"+current_rating+"\t"+current_geek_rating+"\t"+current_weight+"\t"+current_voters+"\t"+current_categories+"\t"+current_mechanisms+"\t"+current_families+"\n"
-            game_out.write(current_stats.replace("N/A","NA").replace('\/','/').replace(' / ','/'))
+            game_out.write(current_stats.replace("N/A","NA").replace('\/','/').replace(' / ','/').replace('&amp;','&'))
             game_out.close()
         HTML_line = HTML_line+1
 
 # Check if progress should be printed.
 
     if p+1 in step_list:
-        print('Fetching boardgame #'+str(max_ID)+' ('+current_name+'). Approximately '+str(round(float((p+1)/int(last_page)*100),2))+'% completed!')
+        now_time = time.monotonic()
+        elapsed_time = now_time-start_time
+        print('Fetching boardgame #'+str(max_ID)+' ('+current_name+'). Approximately '+str(round(float((p+1)/int(last_page)*100),2))+'% completed! Elapsed time: '+time.strftime("%H:%M:%S",time.gmtime(elapsed_time))+'.')
         log_file = open('BGG_log.txt','a')
-        log_file.write('Fetching boardgame #'+str(max_ID)+' ('+current_name+'). Approximately '+str(round(float((p+1)/int(last_page)*100),2))+'% completed!\n')
+        log_file.write('Fetching boardgame #'+str(max_ID)+' ('+current_name+'). Approximately '+str(round(float((p+1)/int(last_page)*100),2))+'% completed! Elapsed time: '+time.strftime("%H:%M:%S",time.gmtime(elapsed_time))+'.\n')
         log_file.close()
 
-print('End. '+str(max_ID)+' games fetched from BGG.')
+browser.close()
+now_time = time.monotonic()
+elapsed_time = now_time-start_time
+print('End. '+str(max_ID)+' games fetched from BGG. Elapsed time: '+time.strftime("%H:%M:%S",time.gmtime(elapsed_time))+'.')
 log_file = open('BGG_log.txt','a')
-log_file.write('End. '+str(max_ID)+' games fetched from BGG.')
+log_file.write('End. '+str(max_ID)+' games fetched from BGG. Elapsed time: '+time.strftime("%H:%M:%S",time.gmtime(elapsed_time))+'.')
 log_file.close()
