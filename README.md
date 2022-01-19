@@ -27,3 +27,4 @@ BGG_fecth will print an output table and a logfile. Currently, only some feature
 8. Number of voters
 9. Game categories
 10. Game mechanics
+11. Other game features ("families")
