@@ -1,7 +1,7 @@
 from urllib.request import urlopen
 #from requests_html import HTMLSession
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
+#from selenium.webdriver.firefox.options import Options
 import argparse
 import os
 import time
