@@ -13,18 +13,20 @@ BGG_fetch will connect to https://boardgamegeek.com/browse/boardgame and downloa
 
 --no-clean   Do not remove temporary files.
 
--o           Print results to fileout file. The default is game.out.
+-o           Print results to fileout file. The default is game_<date>.out.
 
-BGG_fecth will print an output table and a logfile. Currently, only some features are supported, but more are to come.
+BGG_fecth will print an output table and a logfile. Currently, only major features are supported, but more may come.
 
 1. Game title
 2. Year
 3. Minimum players
 4. Maximum players
-5. Average rating
-6. Average Geek rating
-7. Average weight
-8. Number of voters
-9. Game categories
-10. Game mechanics
-11. Other game features ("families")
+5. Minimum player age
+6. Average rating
+7. Average Geek rating
+8. Average weight
+9. Number of weight voters
+10. Number of voters
+11. Game categories
+12. Game mechanics
+13. Other game features ("families")
