@@ -1,3 +1,5 @@
+# Version 1.5
+
 from selenium import webdriver
 import argparse
 import os
@@ -18,11 +20,11 @@ parser = argparse.ArgumentParser()
 # Change the optional title.
 parser._optionals.title = "Arguments"
 
-# Input file.
+# Verbosity.
 parser.add_argument('--steps', dest='steps',required=False,help='How many times should process be printed (number of maximum screen messages)?',default=100)
 
 # Number of games to include.
-parser.add_argument('-p', dest='max_pages',required=False,help='Number of game pages to be parsed from BGG',default=0)
+parser.add_argument('-p', dest='max_pages',required=False,help='Number of game pages to be parsed from BGG',default=150)
 
 # Remove temporary files.
 parser.add_argument('--clean',dest='clean',required=False,help='Remove temporary files',action='store_true')
@@ -60,7 +62,6 @@ if args.max_pages == 0:
         print('Error while downloading the first BGG page. Exiting...')
         exit()
     try:
-#       first_page = browser.page_source.decode('utf-8').encode('cp850','replace').decode('cp850')
         first_page = browser.page_source
     except:
         print('Error while downloading the first BGG page. Exiting...')
@@ -114,17 +115,18 @@ max_ID = 0
 # Start the final output.
 
 game_out = open(args.outfile,'w')
-game_out.write("ID\tGame\tYear\tMin_players\tMax_players\tMin_player_age\tRating\tGeekRating\tWeight\tWeight_voters\tVoters\tCategories\tMechanisms\tFamilies\n")
+game_out.write("ID\tGame\tDesigner\tYear\tMin_players\tMax_players\tMin_player_age\tRating\tGeekRating\tWeight\tWeight_voters\tVoters\tCategories\tMechanisms\tFamilies\n")
 game_out.close()
 
-# Let's start! Calling _p_ the number of pages (last_page), start a cycle with p repetitions.
+# Let's start! Calling _p_ the number of pages (last_page), start a cycle with p repetitions, opening the page starting with the p*100-99-esime game (since from page 21 the site works differently).
 
 for p in range(int(last_page)):
+    p_game = str((p+1)*100-99)
 
 # Open and read page number p.
 
     try:
-        browser.get(base_URL+'/browse/boardgame/page/'+str(p+1))
+        browser.get(base_URL+'/browse/boardgame?sort=rank&rankobjecttype=subtype&rankobjectid=1&rank='+p_game+'#'+p_game)
     except:
         print('Error while downloading page #'+str(p+1)+'. Skipping...')
         log_file = open('BGG_log.txt','a')
@@ -132,7 +134,6 @@ for p in range(int(last_page)):
         log_file.close()
         continue
     try:
-#       current_page = browser.page_source.decode('utf-8').encode('cp850','replace').decode('cp850')
         current_page = browser.page_source
     except:
         print('Error while downloading page #'+str(p+1)+'. Skipping...')
@@ -186,7 +187,6 @@ for p in range(int(last_page)):
                 HTML_line = HTML_line+1
                 continue
             try:
-#               current_game_page = browser.page_source.decode('utf-8').encode('cp850','replace').decode('cp850')
                 current_game_page = browser.page_source
             except:
                 print('Error while downloading the game '+current_name+'. Skipping...')
@@ -276,7 +276,7 @@ for p in range(int(last_page)):
                     stats_line_found = True
                 game_line = game_line+1
 
-# Connects to the 'credits' page, where complete information about categories, mechanisms, and families is available.
+# Connects to the 'credits' page, where complete information about designers, categories, mechanisms, and families is available.
 
             try:
                 browser.get(game_URL+'/credits')
@@ -285,19 +285,20 @@ for p in range(int(last_page)):
                 log_file = open('BGG_log.txt','a')
                 log_file.write('Error while rendering credits of the game '+current_name+'. Setting to NA and skipping...\n')
                 log_file.close()
+                current_designers = "NA"
                 current_categories = "NA"
                 current_mechanisms = "NA"
                 current_families = "NA"
                 HTML_line = HTML_line+1
                 continue
             try:
-#               game_session = browser.page_source.decode('utf-8').encode('cp850','replace').decode('cp850')
                 game_session = browser.page_source
             except:
                 print('Error while rendering credits of the game '+current_name+'. Setting to NA and skipping...')
                 log_file = open('BGG_log.txt','a')
                 log_file.write('Error while rendering credits of the game '+current_name+'. Setting to NA and skipping...\n')
                 log_file.close()
+                current_designers = "NA"
                 current_categories = "NA"
                 current_mechanisms = "NA"
                 current_families = "NA"
@@ -317,6 +318,7 @@ for p in range(int(last_page)):
                 log_file = open('BGG_log.txt','a')
                 log_file.write('Error while rendering credits of the game '+current_name+'. Setting to NA and skipping...\n')
                 log_file.close()
+                current_designers = "NA"
                 current_categories = "NA"
                 current_mechanisms = "NA"
                 current_families = "NA"
@@ -329,6 +331,7 @@ for p in range(int(last_page)):
             while string_line_found == False and game_end_found == False:
                 if game_line+1 == len(current_credits_list):
                     game_end_found = True
+                    current_designers = "NA"
                     current_categories = "NA"
                     current_mechanisms = "NA"
                     current_families = "NA"
@@ -338,6 +341,16 @@ for p in range(int(last_page)):
 # The line with 'GEEK.geekitemPreload' is the second choice: this is because 'Preload' may imply that the page has not been fully rendered.
 
                 if 'GEEK.geekitemPreload' in string_line:
+                    if '"boardgamedesigner":[' in string_line:
+                        raw_designers = string_line.split('"boardgamedesigner":[')[1].split(']')[0]
+                        designer_number = raw_designers.count('"name":')
+                        if designer_number == 0:
+                            current_designers_worse = "NA"
+                        else:
+                            current_designers_worse = raw_designers.split('"name":"')[1].split('",')[0]
+                            if designer_number > 1:
+                                for c in range(1,designer_number):
+                                    current_designers_worse = current_designers_worse+'|'+raw_designers.split('"name":"')[c+1].split('",')[0]
                     if '"boardgamecategory":[' in string_line:
                         raw_categories = string_line.split('"boardgamecategory":[')[1].split(']')[0]
                         category_number = raw_categories.count('"name":')
@@ -372,6 +385,14 @@ for p in range(int(last_page)):
 # The page with '<span class="rating-stars-secondary">' is the first choice (on empirical bases!).
 
                 if '<span class="rating-stars-secondary">' in string_line:
+                    designer_number = string_line.count(' href="/boardgamedesigner/')
+                    if designer_number == 0:
+                        current_designers = "NA"
+                    else:
+                        current_designers = string_line.split(' href="/boardgamedesigner/')[1].split('</a>')[0].split('>')[1]
+                        if designer_number > 1:
+                            for c in range(1,designer_number):
+                                current_designers = current_designers+'|'+string_line.split(' href="/boardgamedesigner/')[c+1].split('</a>')[0].split('>')[1]
                     category_number = string_line.count(' href="/boardgamecategory/')
                     if category_number == 0:
                         current_categories = "NA"
@@ -401,6 +422,8 @@ for p in range(int(last_page)):
 
 # If the first choices for categories, mechanisms, and famililes are 'NA', they are replaced with second choices (until they are not 'NA', too).
 
+            if current_designers == 'NA' and current_designers_worse != 'NA':
+                current_designers = current_designers_worse
             if current_categories == 'NA' and current_categories_worse != 'NA':
                 current_categories = current_categories_worse
             if current_mechanisms == 'NA' and current_mechanisms_worse != 'NA':
@@ -411,7 +434,7 @@ for p in range(int(last_page)):
 # Write a line of the final table-formatted file.
 
             game_out = open(args.outfile,'a')
-            current_stats = str(current_ID)+"\t"+current_name+"\t"+current_year+"\t"+current_min_players+"\t"+current_max_players+"\t"+current_min_player_age+"\t"+current_rating+"\t"+current_geek_rating+"\t"+current_weight+"\t"+current_num_weights+"\t"+current_voters+"\t"+current_categories+"\t"+current_mechanisms+"\t"+current_families+"\n"
+            current_stats = str(current_ID)+"\t"+current_name+"\t"+current_designers+"\t"+current_year+"\t"+current_min_players+"\t"+current_max_players+"\t"+current_min_player_age+"\t"+current_rating+"\t"+current_geek_rating+"\t"+current_weight+"\t"+current_num_weights+"\t"+current_voters+"\t"+current_categories+"\t"+current_mechanisms+"\t"+current_families+"\n"
             current_stats = current_stats.replace('\"','^^')
             current_stats = current_stats.replace('\'','^')
             current_stats = current_stats.replace('#','')
