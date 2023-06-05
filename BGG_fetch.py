@@ -1,15 +1,17 @@
-# Version 1.5
-
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import argparse
 import os
 import datetime
 import time
 
-chrome_webdriver = '/home/PERSONALE/federico.plazzi2/chromedriver_linux64/chromedriver'
-chrome_options = webdriver.ChromeOptions()
+chrome_options = Options()
 chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--disable-dev-shm-usage')
 chrome_options.add_argument('--headless')
+chrome_options.add_argument('--remote-debugging-port=9222')
 chrome_options.add_argument('--disable-gpu')
 
 base_URL = 'https://boardgamegeek.com'
@@ -41,7 +43,8 @@ args = parser.parse_args()
 
 # Open a headless Chrome browser (ensure that the browser and the drivers match!) and start counting elapsed time.
 
-browser = webdriver.Chrome(chrome_webdriver,chrome_options=chrome_options)
+browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+browser.get(base_URL)
 start_time = time.monotonic()
 
 print('Connected to site '+base_URL+'/browse/boardgame...')
